@@ -3,7 +3,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // AI Financial Advisor & Chatbot Service
 // Uses Gemini API for financial advice and conversational AI
 
-const API_KEY = "AIzaSyBxKUwJq3VBgv2djepU_96HHvp7T2Lychk";
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
+if (!API_KEY) {
+  console.warn("VITE_GEMINI_API_KEY is missing from environment variables.");
+}
+
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 export interface ChatMessage {

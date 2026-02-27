@@ -32,7 +32,14 @@ export interface PredictionData {
 }
 
 export class MarketService {
-  private static readonly API_KEY = 'd6gfqp9r01quah09d45gd6gfqp9r01quah09d460';
+  private static readonly API_KEY = import.meta.env.VITE_FINNHUB_API_KEY || '';
+  
+  static {
+    if (!this.API_KEY) {
+      console.warn("VITE_FINNHUB_API_KEY is missing from environment variables.");
+    }
+  }
+
   private static readonly BASE_URL = 'https://finnhub.io/api/v1';
   private static readonly TRENDING_STOCKS = [
     'AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'NVDA', 'META', 'NFLX'
