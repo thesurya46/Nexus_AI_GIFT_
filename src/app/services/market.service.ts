@@ -131,6 +131,52 @@ export class MarketService {
     }));
   }
 
+  static async getCandleData(symbol: string, timeframe: string): Promise<any[]> {
+    try {
+      const resolution = timeframe === '1D' ? '60' : timeframe === '1W' ? 'D' : 'W';
+      const to = Math.floor(Date.now() / 1000);
+      let from = to;
+      
+      if (timeframe === '1D') from -= 86400; // 1 day
+      else if (timeframe === '1W') from -= 7 * 86400; // 1 week
+      else from -= 30 * 86400; // 1 month
+
+      const response = await fetch(`${this.BASE_URL}/stock/candle?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${to}&token=${this.API_KEY}`);
+      if (!response.ok) throw new Error('API Error');
+      const data = await response.json();
+
+      if (data.s !== 'ok') throw new Error('No data');
+
+      return data.t.map((timestamp: number, index: number) => ({
+        x: new Date(timestamp * 1000),
+        y: [data.o[index], data.h[index], data.l[index], data.c[index]]
+      }));
+    } catch (error) {
+      console.warn('Falling back to mock candle data for chart', symbol);
+      return this.getMockCandleData(symbol, timeframe);
+    }
+  }
+
+  static async getMockCandleData(symbol: string, timeframe: string): Promise<any[]> {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const points = timeframe === '1D' ? 24 : timeframe === '1W' ? 7 : 30;
+    let basePrice = Math.random() * 500 + 50;
+    
+    return Array.from({ length: points }, (_, i) => {
+      const open = basePrice + (Math.random() - 0.5) * 10;
+      const close = open + (Math.random() - 0.5) * 20;
+      const high = Math.max(open, close) + Math.random() * 5;
+      const low = Math.min(open, close) - Math.random() * 5;
+      basePrice = close;
+
+      return {
+        x: new Date(Date.now() - (points - i) * 86400000),
+        y: [open, high, low, close]
+      };
+    });
+  }
+
   static async getTrendingStocks(): Promise<StockData[]> {
     return Promise.all(
       this.TRENDING_STOCKS.map(symbol => this.getStockQuote(symbol))

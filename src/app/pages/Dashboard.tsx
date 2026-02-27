@@ -38,6 +38,7 @@ import {
 import { PortfolioService } from '../services/portfolio.service';
 import { MarketService } from '../services/market.service';
 import { AuthService } from '../services/auth.service';
+import Chart from 'react-apexcharts';
 
 const COLORS = ['#00d4ff', '#7c3aed', '#10b981', '#f59e0b'];
 
@@ -46,6 +47,7 @@ export function Dashboard() {
   const [trendingStocks, setTrendingStocks] = useState<any[]>([]);
   const [portfolioData, setPortfolioData] = useState<any[]>([]);
   const [performanceData, setPerformanceData] = useState<any[]>([]);
+  const [candleSeries, setCandleSeries] = useState<any[]>([{ data: [] }]);
   const user = AuthService.getCurrentUser();
 
   useEffect(() => {
@@ -53,14 +55,16 @@ export function Dashboard() {
   }, []);
 
   const loadDashboardData = async () => {
-    const [portfolioMetrics, trending, holdings] = await Promise.all([
+    const [portfolioMetrics, trending, holdings, candleData] = await Promise.all([
       PortfolioService.getMetrics(),
       MarketService.getTrendingStocks(),
       PortfolioService.getHoldings(),
+      MarketService.getCandleData('AAPL', '1M'),
     ]);
 
     setMetrics(portfolioMetrics);
     setTrendingStocks(trending.slice(0, 6));
+    setCandleSeries([{ data: candleData }]);
     
     // Prepare portfolio allocation chart data
     setPortfolioData(
@@ -320,6 +324,44 @@ export function Dashboard() {
             </Card>
           </motion.div>
         </div>
+
+        {/* Market Overview Candlestick Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+        >
+          <Card className="glass p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl mb-1">Market Overview (AAPL)</h3>
+                <p className="text-sm text-muted-foreground">Apple Inc. - Last 30 Days Live Action</p>
+              </div>
+            </div>
+            <div className="w-full text-white" style={{ minHeight: '350px' }}>
+              <Chart
+                options={{
+                  chart: { type: 'candlestick', background: 'transparent', toolbar: { show: false } },
+                  theme: { mode: 'dark' },
+                  xaxis: { type: 'datetime', labels: { style: { colors: '#8b92b0' } } },
+                  yaxis: { tooltip: { enabled: true }, labels: { style: { colors: '#8b92b0' }, formatter: (v) => `$${v.toFixed(2)}` } },
+                  grid: { borderColor: 'rgba(255,255,255,0.1)', strokeDashArray: 3 },
+                  plotOptions: {
+                    candlestick: {
+                      colors: {
+                        upward: '#10b981',
+                        downward: '#ef4444'
+                      }
+                    }
+                  }
+                }}
+                series={candleSeries}
+                type="candlestick"
+                height={350}
+              />
+            </div>
+          </Card>
+        </motion.div>
 
         {/* Trending Stocks & Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
