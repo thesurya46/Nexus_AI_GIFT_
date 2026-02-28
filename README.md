@@ -1,6 +1,6 @@
 # WealthNexus AI – Intelligent Finance Education & Investment Platform
 
-> An AI-powered fintech platform combining financial education, intelligent analytics, and real-world investment decision-making.
+### An AI-powered fintech platform combining financial education, intelligent analytics, and real-world investment decision-making.
 
 ## 🚀 Overview
 
